@@ -1,8 +1,6 @@
-#include <opencv2\core\core.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-#include <opencv2\video\background_segm.hpp>
-#include <opencv2\highgui\highgui.hpp>
-
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/video/background_segm.hpp"
 
 #include <iostream>
 #include <stdio.h>
@@ -50,9 +48,6 @@ ball::ball()
 
 int main(int argc, const char** argv)
 {
-
-
-
 
 	b2Body* floorBody;
 	b2BodyDef floorDef;
@@ -103,8 +98,10 @@ int main(int argc, const char** argv)
 	BackgroundSubtractorMOG2 mog(5000, 16, false);
 
 	while (key != 'q'){
+		// waitKey value have to be big
+		key = waitKey(200);
+
 		capture >> frame;
-		key = waitKey(1);
 
 		GaussianBlur(frame, frame, Size(3, 3), 0, 0);
 
