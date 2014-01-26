@@ -10,16 +10,55 @@
 using namespace std;
 using namespace cv;
 
+
 int thresh = 100;
 int max_thresh = 255;
 RNG rng(12345);
 
 
-b2Vec2 gravity(0.0f, 10.0f);
+b2Vec2 gravity(0.0f, 9.0f);
 b2World world(gravity);
 
 float pixel = 30;
 float space = 50;
+
+class MyContactListener : public b2ContactListener
+{
+	void endcontact(b2Contact* contact)
+	{
+		b2Body* bodyA = contact->GetFixtureA()->GetBody();
+		bodyA->ApplyLinearImpulse(b2Vec2(0.0f, 4.0f), bodyA->GetPosition(), true);
+
+		b2Body* bodyB = contact->GetFixtureB()->GetBody();
+		bodyB->ApplyLinearImpulse(b2Vec2(0.0f, 4.0f), bodyB->GetPosition(), true);
+	}
+};
+
+Mat getskin(Mat input)
+{
+	int y_min = 0;
+	int y_max = 121;
+	int cr_min = 71;
+	int cr_max = 119;
+	int cb_min = 69;
+	int cb_max = 117;
+
+	Mat skin;
+	//first convert our rgb image to ycrcb
+	cvtColor(input, skin, CV_BGR2YCrCb);
+
+	//uncomment the following line to see the image in ycrcb color space
+	//cv::imshow("ycrcb color space",skin);
+
+	//filter the image in ycrcb color space
+	cv::inRange(skin, Scalar(y_min, cr_min, cb_min), Scalar(y_max, cr_max, cb_max), skin);
+}
+
+
+void createTrackbars()
+{
+
+}
 
 class ball
 {
@@ -48,6 +87,8 @@ ball::ball()
 
 int main(int argc, const char** argv)
 {
+	MyContactListener myContactListener;
+	world.SetContactListener(&myContactListener);
 
 	b2Body* floorBody;
 	b2BodyDef floorDef;
@@ -97,21 +138,21 @@ int main(int argc, const char** argv)
 	Mat frame, foreground, image;
 	BackgroundSubtractorMOG2 mog(5000, 16, false);
 
+	waitKey(200);
 	while (key != 'q'){
-		// waitKey value have to be big
-		key = waitKey(200);
-
 		capture >> frame;
+		key = waitKey(1);
 
 		GaussianBlur(frame, frame, Size(3, 3), 0, 0);
 
 		image = frame.clone();
 		mog(frame, foreground, -10);
 
+		
+
 		dilate(foreground, foreground, Mat());
 
 		imshow("Foreground ", foreground);
-
 
 		Mat threshold_output = foreground.clone();
 		vector<vector<Point> > contours;
@@ -165,17 +206,20 @@ int main(int argc, const char** argv)
 			circle(image, Point(position.x * pixel, position.y * pixel), 20, CV_RGB(0, 255, 0), 3, 8, 0);
 		}
 
+
+
 		if (num != -1)
 		{
 			world.DestroyBody(bodyy);
 		}
 
+		flip(image, image, 1);
 		imshow("Capture ", image);
 
 	}
 
 	capture.release();
 
-	destroyWindow("Capture ");
-	destroyWindow("Foreground ");
+	cv::destroyWindow("Capture ");
+	cv::destroyWindow("Foreground ");
 }
